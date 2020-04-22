@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "TEST.1.C": "cpp"
+        "TEST.1.C": "cpp",
+        "cstdio": "cpp"
     }
 }
