@@ -46,41 +46,13 @@
 //     printf("%lld\n",fi(n));
 //     return 0;
 // }
-// #include<stdio.h>
-// int max(int a,int b)
-// {
-//     if(a>b)
-//         return a;
-//     else
-//     {
-//         return b;
-//     }
-// }
-// int main()
-// {
-//     int m,t,s;
-//     scanf("%d%d%d",&m,&t,&s);
-//     if(s%t==0)
-//     {
-//         printf("%d\n",max(m-s/t,0));
-//         return 0;
-//     }
-//     else
-//     {
-//         printf("%d\n",max(m-s/t-1,0));
-//         return 0;
-//     }
-// }
 #include<stdio.h>
 int main()
 {
-    char a;
-    FILE *in;
-    a='a';
-    in=fopen("test.txt","r");
-    int n=fscanf(in,"%c",&a);
-    printf("%c %d\n",a,n);
-    n=fscanf(in,"%c",&a);
-    printf("%c %d\n",a,n);
+    union data {char op;int x};
+    union data a,b;
+    a.op='c';
+    b.x=50;
+    printf("%c %d\n",b.x,a.op);
     return 0;
 }

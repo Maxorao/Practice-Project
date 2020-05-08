@@ -1,13 +1,6 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
-int istar(char c)
-{
-    if(c=='{'||c=='}'||c=='('||c==')')
-        return 1;
-    else 
-        return 0;
-}
 int le(char c)
 {
     if(c=='('||c=='{')
@@ -53,10 +46,15 @@ int main()
     else
     {
         char c;
-        int cou=0;
         i=0;
         while(~fscanf(in,"%c",&c))
         {
+            if(c=='\n')
+            {
+                while(~fscanf(in,"%c",&c))
+                    if(c=='\n')
+                        continue;
+            }
             if(c=='/')
             {
                 fscanf(in,"%c",&c);
@@ -77,9 +75,8 @@ int main()
             }
             if(c=='\n')
             {
-                while(c=='\n')
-                    fscanf(in,"%c",&c);
                 line++;
+                continue;
             }
             if(le(c))
             {
