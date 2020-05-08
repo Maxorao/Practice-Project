@@ -80,7 +80,6 @@ int main()
                 while(c=='\n')
                     fscanf(in,"%c",&c);
                 line++;
-                continue;
             }
             if(le(c))
             {
