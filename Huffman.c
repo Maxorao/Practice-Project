@@ -1,5 +1,6 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include<string.h>
 typedef struct charInt
 {
     int freq;
@@ -8,18 +9,19 @@ typedef struct charInt
     struct charInt* lchild;
     struct charInt* rchild;
 }Letterlist;
-int HuffmanTable[200]={0};
+char HuffmanTable[128][20];
+char Code[9]={'\0'};
 Letterlist* TreeHead;
 Letterlist* ListHead;
 char Text[10000]={'\0'};
 void CreateHuffmanTree();
-void CreateHuffmanTable();
+void CreateHuffmanTable(Letterlist* p,char Code[9],int top);
 void CreateFrequenceTree();
 void CreateList(Letterlist* p);
 void StatisticFrequency(char c);
 void EncryptText();
-void OutPutInX();
-void InsertList(Letterlist* p);
+void InsertList(Letterlist* p,int state);
+void GetCode(char c,char Code[]);
 void init();
 void mycmp(const void* a,const void* b);
 int main()
@@ -32,11 +34,9 @@ int main()
 
     CreateHuffmanTree();
 
-    CreateHuffmanTable();
+    CreateHuffmanTable(TreeHead,Code,0);
 
     EncryptText();
-
-    OutPutInX();
 
     return 0;
 }
@@ -48,6 +48,7 @@ void init()
 void CreateFrequenceTree()
 {
     FILE* in;
+    int i=0;
     if((in=fopen("input.txt","r"))==NULL)
     {
         perror("Can't open the file");
@@ -56,19 +57,16 @@ void CreateFrequenceTree()
     else
     {
         char c;
-        while(fscanf(in,"%c",&c))
+        while(~fscanf(in,"%c",&c))
         {
             if(c=='\n')
             {
                 continue;
             }
-            if(c=='\0')
-            {
-                StatisticFrequency(c);
-                return;
-            }
+            Text[i++]=c;
             StatisticFrequency(c);
         }
+        StatisticFrequency('\0');
     }
 }
 void StatisticFrequency(char c)
@@ -81,26 +79,42 @@ void StatisticFrequency(char c)
         {
             if(c>p->letter)
             {
+                if(p->rchild==NULL)
+                {
+                    p->rchild=(Letterlist*)malloc(sizeof(Letterlist));
+                    p=p->rchild;
+                    break;
+                }
                 p=p->rchild;
+                continue;
             }
             else if(c<p->letter)
             {
+                if(p->lchild==NULL)
+                {
+                    p->lchild=(Letterlist*)malloc(sizeof(Letterlist));
+                    p=p->lchild;
+                    break;
+                }
                 p=p->lchild;
+                continue;
             }
             else if(c==p->letter)
             {
                 p->freq++;
+                return;
             }
         }
-        p=(Letterlist*)malloc(sizeof(Letterlist));
         p->letter=c;
         p->freq=1;
         p->lchild=NULL;
+        p->next=NULL;
         p->rchild=NULL;
         return;
     }
     else if(TreeHead==NULL)
     {
+        TreeHead=(Letterlist*)malloc(sizeof(Letterlist));
         TreeHead->letter=c;
         TreeHead->freq=1;
         TreeHead->lchild=NULL;
@@ -108,9 +122,30 @@ void StatisticFrequency(char c)
     }
     return;
 }
-void CreateHuffmanTable()
+void CreateHuffmanTable(Letterlist* p,char Code[9],int top)
 {
-
+    if(p->lchild!=NULL)
+    {
+        Code[top]='0';
+        CreateHuffmanTable(p->lchild,Code,top+1);
+    }
+    if(p->rchild!=NULL)
+    {
+        Code[top]='1';
+        CreateHuffmanTable(p->rchild,Code,top+1);
+        Code[top]=0;
+    }
+    if(p->rchild==NULL&&p->lchild==NULL)
+    {
+        GetCode(p->letter,Code);
+        return;
+    }
+    return;
+}
+void GetCode(char c,char Code[])
+{
+    strcpy(HuffmanTable[c],Code);
+    return;
 }
 void CreateHuffmanTree()
 {
@@ -121,11 +156,9 @@ void CreateHuffmanTree()
         p->lchild=ListHead;
         p->rchild=ListHead->next;
         ListHead=ListHead->next->next;
-        if(ListHead==NULL)
-        {
-
-        }
+        InsertList(p,0);
     }
+    TreeHead=ListHead;
 }
 void CreateList(Letterlist* p)
 {
@@ -135,47 +168,126 @@ void CreateList(Letterlist* p)
     }
     if(p->lchild==NULL&&p->rchild==NULL)
     {
-        insert(p);
+        InsertList(p,1);
         return;
     }
-    insert(p);
     CreateList(p->rchild);
     CreateList(p->lchild);
+    InsertList(p,1);
     return;
 }
-void InsertList(Letterlist* p)
+void InsertList(Letterlist* p,int state)
 {
+    if(state==1)
+    {
+        p->lchild=NULL;
+        p->rchild=NULL;
+    }
     if(ListHead==NULL)
     {
-        ListHead=(Letterlist*)malloc(sizeof(Letterlist));
         ListHead=p;
         ListHead->next=NULL;
+        return;
     }
     Letterlist* Forward=ListHead;
     Letterlist* BackWard=NULL;
     while(Forward!=NULL)
     {
-        if(p->freq<=Forward->freq)
+        if(p->freq<Forward->freq)
         {
-            Letterlist* temp=(Letterlist*)malloc(sizeof(Letterlist));
-            temp->next=Forward;
-            temp=p;
+            p->next=Forward;
             if(BackWard!=NULL)
             {
-                BackWard->next=temp;
+                BackWard->next=p;
+                return;
             }
-            return;
+            else
+            {
+                ListHead=p;
+                return;
+            }
+        }
+        if(p->freq==Forward->freq&&state==1)
+        {
+            if(p->letter<Forward->letter)
+            {
+                p->next=Forward;
+                if(BackWard!=NULL)
+                {
+                    BackWard->next=p;
+                    return;
+                }
+                else
+                {
+                    ListHead=p;
+                    return;
+                }
+            }
         }
         BackWard=Forward;
         Forward=Forward->next;
     }
-    Forward=(Letterlist*)malloc(sizeof(Letterlist));
-    Forward->next=NULL;
     Forward=p;
+    Forward->next=NULL;
     BackWard->next=Forward;
     return;
 }
 void EncryptText()
 {
-
+    FILE* out;
+    out=fopen("output.txt","w");
+    int i=0,j=0,k=0;
+    unsigned char c='\0';
+    while(Text[i]!='\0')
+    {
+        for(;HuffmanTable[Text[i]][k]!='\0'&&j<8;k++,j++)
+        {
+            c=(c<<1)|(HuffmanTable[Text[i]][k]-'0');
+        }
+        if(HuffmanTable[Text[i]][k]=='\0')
+        {
+            i++;
+            k=0;
+        }
+        if(j==8)
+        {
+            printf("%x",c);
+            fprintf(out,"%c",c);
+            j=0;
+            c=0;
+        }
+        if(Text[i]=='\0')
+        {
+            for(;HuffmanTable['\0'][k]!='\0'&&j<8;k++,j++)
+            {
+                c=(c<<1)|(HuffmanTable['\0'][k]-'0');
+            }
+            if(HuffmanTable['\0'][k]=='\0')
+            {
+                for(;j<8;j++)
+                {
+                    c=c<<1;
+                }
+                printf("%x\n",c);
+                fprintf(out,"%c",c);
+                return;
+            }
+            if(j==8)
+            {
+                printf("%x",c);
+                fprintf(out,"%c",c);
+                for(j=0;HuffmanTable['\0'][k]!='\0'&&j<8;k++,j++)
+                {
+                    c=(c<<1)|(HuffmanTable['\0'][k]-'0');
+                }
+                for(;j<8;j++)
+                {
+                    c=c<<1;
+                }
+                printf("%x\n",c);
+                fprintf(out,"%c",c);
+                return;
+            }
+        }
+    }
 }
